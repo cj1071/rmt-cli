@@ -341,6 +341,7 @@ function applyProjectTransform(targetDir: string, options: CreateOptionsResolved
     service: `${options.projectName}-service`,
     web: `${options.projectName}-web`
   };
+  const appClassName = `${toPascalCase(options.projectName)}Application`;
 
   renameModuleDirectories(targetDir, moduleArtifacts);
 
@@ -353,6 +354,8 @@ function applyProjectTransform(targetDir: string, options: CreateOptionsResolved
       groupId: options.groupId,
       artifactId: options.artifactId,
       projectName: options.projectName,
+      moduleName: options.moduleName,
+      appClassName,
       moduleArtifacts,
       basePackage,
       servicePackage
@@ -360,6 +363,7 @@ function applyProjectTransform(targetDir: string, options: CreateOptionsResolved
   }
 
   renameJavaPackageDirs(targetDir, moduleArtifacts, options.projectName, options.moduleName);
+  renameWebApplicationFile(targetDir, moduleArtifacts, options.projectName, appClassName);
 }
 
 function renameModuleDirectories(
@@ -391,6 +395,8 @@ function rewriteFileContent(
     groupId: string;
     artifactId: string;
     projectName: string;
+    moduleName: string;
+    appClassName: string;
     moduleArtifacts: { bom: string; common: string; service: string; web: string };
     basePackage: string;
     servicePackage: string;
@@ -420,6 +426,12 @@ function rewriteFileContent(
   } else {
     content = replaceAll(content, 'com.baosight.demo.dm', context.servicePackage);
     content = replaceAll(content, 'com.baosight.demo', context.basePackage);
+    content = replaceAll(content, 'DemoApplication', context.appClassName);
+  }
+
+  if (path.extname(filePath).toLowerCase() === '.properties') {
+    content = replacePropertyValue(content, 'projectName', context.projectName);
+    content = replacePropertyValue(content, 'moduleName', context.moduleName);
   }
 
   if (content !== original) {
@@ -432,6 +444,12 @@ function replaceAll(content: string, source: string, target: string): string {
     return content;
   }
   return content.split(source).join(target);
+}
+
+function replacePropertyValue(content: string, key: string, value: string): string {
+  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`(^\\s*${escapedKey}\\s*=).*$`, 'gm');
+  return content.replace(pattern, `$1${value}`);
 }
 
 function renameJavaPackageDirs(
@@ -449,6 +467,35 @@ function renameJavaPackageDirs(
   moveDir(path.join(serviceBase, 'demo', 'dm'), path.join(serviceBase, projectName, moduleName));
 
   removeIfEmpty(path.join(serviceBase, 'demo'));
+}
+
+function renameWebApplicationFile(
+  targetDir: string,
+  moduleArtifacts: { bom: string; common: string; service: string; web: string },
+  projectName: string,
+  appClassName: string
+): void {
+  const webBase = path.join(targetDir, moduleArtifacts.web, 'src', 'main', 'java', 'com', 'baosight', projectName);
+  const oldFile = path.join(webBase, 'DemoApplication.java');
+  const newFile = path.join(webBase, `${appClassName}.java`);
+
+  if (!fs.existsSync(oldFile) || oldFile === newFile) {
+    return;
+  }
+
+  fs.renameSync(oldFile, newFile);
+}
+
+function toPascalCase(value: string): string {
+  if (!value) {
+    return 'Project';
+  }
+
+  return value
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join('');
 }
 
 function moveDir(srcDir: string, destDir: string): void {
