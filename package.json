@@ -16,6 +16,8 @@
     "build": "tsup src/index.ts --format cjs --dts --clean",
     "dev": "tsx src/index.ts",
     "check": "tsc --noEmit",
+    "test:e2e": "node tests/create.e2e.cjs",
+    "ci": "npm run check && npm run build && npm run test:e2e",
     "prepare": "npm run build",
     "prepublishOnly": "npm run check"
   },

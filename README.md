@@ -46,6 +46,22 @@ rmt -v
 rmt create --help
 ```
 
+## 质量校验
+
+```bash
+# 类型检查
+npm run check
+
+# 构建
+npm run build
+
+# e2e（模板生成规则校验）
+npm run test:e2e
+
+# CI 等价本地校验
+npm run ci
+```
+
 ## 创建项目
 
 ```bash
@@ -92,24 +108,35 @@ rmt create --template v6-gbase --name rmplat4j-v6-gbase \
 - `--template-dir <dir>`：覆盖内置模板目录
 - `--keep-demo`：保留模板中的 `demo`/`dm` 示例代码
 
-## 发布建议
+## 发布
 
-GitHub：
-
-```bash
-git add .
-git commit -m "feat: upgrade rmt-cli with tsup and built-in templates"
-git push
-```
-
-npm：
+### 手动发布（本地）
 
 ```bash
-pnpm run check
-pnpm run build
+npm run ci
 npm publish --access public
 ```
 
+### 自动发布（GitHub Tag）
+
+仓库内置工作流：
+- [CI](.github/workflows/ci.yml)
+- [Release npm](.github/workflows/release.yml)
+
+发布步骤：
+
+```bash
+# 1) 提交代码
+git add .
+git commit -m "chore: release v0.2.2"
+git push
+
+# 2) 打 tag（版本号需与 package.json 一致）
+git tag v0.2.2
+git push origin v0.2.2
+```
+
 说明：
-- `package.json` 已通过 `files` 字段限制发布内容（`dist` + `templates` + `README.md`）。
-- 发布前会执行 `prepublishOnly`，自动做类型检查和构建。
+1. `release.yml` 会校验 `package.json` 的 version 是否与 tag 一致，不一致会失败。
+2. 发布命令为 `npm publish --access public --provenance`。
+3. 可用 `NPM_TOKEN`（GitHub Secret）发布；也可配置 npm Trusted Publishing（OIDC）。
