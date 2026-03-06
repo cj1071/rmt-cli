@@ -1,5 +1,5 @@
 {
-  "name": "@baosight/rmt-cli",
+  "name": "@irailmetro/rmt-cli",
   "version": "0.2.0",
   "description": "CLI for scaffolding iPLAT4J Maven projects",
   "license": "UNLICENSED",
