@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.baosight.demo</groupId>
+        <artifactId>demo-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>demo-bom</artifactId>
+    <version>${demo.bom.version}</version>
+    <packaging>pom</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.baosight.iplat4j.core</groupId>
+            <artifactId>iplat4j-core</artifactId>
+            <version>${iplat4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baosight.iplat4j</groupId>
+            <artifactId>iplat4j-ui</artifactId>
+            <version>${iplat4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baosight.iplat4j</groupId>
+            <artifactId>iplat4j-admin</artifactId>
+            <version>${iplat4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baosight.iplat4j</groupId>
+            <artifactId>xservices-security</artifactId>
+            <version>${iplat4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+</project>

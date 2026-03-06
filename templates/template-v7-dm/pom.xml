@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.baosight.demo</groupId>
+    <artifactId>demo-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>demo-parent</name>
+    <description>iPLAT4J backend multi-module template</description>
+
+    <modules>
+        <module>demo-bom</module>
+        <module>demo-common</module>
+        <module>demo-service</module>
+        <module>demo-web</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <java.version>1.8</java.version>
+        <spring.boot.version>2.7.18</spring.boot.version>
+        <iplat4j.version>7.1.0</iplat4j.version>
+        <dm.driver.version>8.1.1.190</dm.driver.version>
+
+        <demo.bom.version>1.0.0-SNAPSHOT</demo.bom.version>
+        <demo.common.version>1.0.0-SNAPSHOT</demo.common.version>
+        <demo.service.version>1.0.0-SNAPSHOT</demo.service.version>
+        <demo.web.version>1.0.0-SNAPSHOT</demo.web.version>
+
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>local</id>
+            <properties>
+                <profiles.active>local</profiles.active>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <profiles.active>dev</profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <profiles.active>test</profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <profiles.active>prod</profiles.active>
+            </properties>
+        </profile>
+    </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.iplat4j</groupId>
+                <artifactId>iplat4j-boot-starter</artifactId>
+                <version>${iplat4j.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.iplat4j</groupId>
+                <artifactId>redis-plugin</artifactId>
+                <version>${iplat4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.iplat4j</groupId>
+                <artifactId>xservices-job</artifactId>
+                <version>${iplat4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.iplat4j</groupId>
+                <artifactId>org-all-plugin</artifactId>
+                <version>${iplat4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.iplat4j</groupId>
+                <artifactId>xservices-bpm</artifactId>
+                <version>${iplat4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dm</groupId>
+                <artifactId>dm8-jdbc-driver-18</artifactId>
+                <version>${dm.driver.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baosight.demo</groupId>
+                <artifactId>demo-bom</artifactId>
+                <version>${demo.bom.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.demo</groupId>
+                <artifactId>demo-common</artifactId>
+                <version>${demo.common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.demo</groupId>
+                <artifactId>demo-service</artifactId>
+                <version>${demo.service.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baosight.demo</groupId>
+                <artifactId>demo-web</artifactId>
+                <version>${demo.web.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>rt-releases</id>
+            <name>rt release</name>
+            <url>http://10.70.21.1/nexus/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>rt-snapshots</id>
+            <name>rt snapshots</name>
+            <url>http://10.25.107.28:8081/nexus/repository/maven-snapshots/</url>
+        </repository>
+        <repository>
+            <id>baocloud-maven</id>
+            <name>baocloud maven</name>
+            <url>http://nexus.baocloud.cn/content/groups/public/</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>rt-releases</id>
+            <name>rt release</name>
+            <url>http://10.70.21.1/nexus/repository/maven-public/</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>rt-snapshots</id>
+            <name>rt snapshots</name>
+            <url>http://10.25.107.28:8081/nexus/repository/maven-snapshots/</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>baocloud-maven</id>
+            <name>baocloud maven</name>
+            <url>http://nexus.baocloud.cn/content/groups/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <distributionManagement>
+        <repository>
+            <id>baocloud-maven</id>
+            <name>maven-releases</name>
+            <url>https://nexus.baocloud.cn/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>baocloud-maven</id>
+            <name>maven-snapshots</name>
+            <url>https://nexus.baocloud.cn/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>3.1.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

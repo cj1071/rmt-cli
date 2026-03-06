@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <!--自定义属性-->
+    <Properties>
+        <Property name="PID">mylog</Property>
+        <Property name="LOG_EXCEPTION_CONVERSION_WORD">%xwEx</Property>
+        <Property name="LOG_LEVEL_PATTERN">%5p</Property>
+        <!--<Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread][%file:%line] - %msg%n</Property>-->
+        <!--参考文档 https://logging.apache.org/log4j/2.x/manual/layouts.html#PatternLayout -->
+        <Property name="LOG_PATTERN">%highlight{%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{1.} - %msg%n%}</Property>
+        <!--日志路径-->
+        <Property name="baseDir">./apps/logs</Property>
+    </Properties>
+    <!--用于入库日志表对应级别-->
+    <CustomLevels>
+        <CustomLevel name="DIAG" intLevel="350" />
+    </CustomLevels>
+    <Appenders>
+        <!--控制台输出-->
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <!--RollingFile代替file,按时间输出所有info日志-->
+        <RollingFile name="InfoFile" fileName="${baseDir}/iplat.app.log"
+                     filePattern="${baseDir}/$${date:yyyyMMdd}/iplat-%d{yyyy-MM-dd-HH}.log">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] %l %logger{36} - %msg%n" />
+            <Policies>
+                <!-- jvm重启就进行一次rollover-->
+                <OnStartupTriggeringPolicy />
+                <!--默认1小时滚动一次-->
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <!--文件大小超过200m新生成一个-->
+                <!--   <SizeBasedTriggeringPolicy size="100 MB"/>-->
+                <!--同一个文件夹下最多-->
+                <!-- <DefaultRolloverStrategy max="32" />-->
+            </Policies>
+            <!--文件最大配置，超出则删除历史日志-->
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${baseDir}" maxDepth="2">
+                    <IfFileName glob="*/iplat-*.log">
+                        <IfLastModified age="10d">
+                            <IfAny>
+                                <IfAccumulatedFileSize exceeds="10 GB" />
+                                <IfAccumulatedFileCount exceeds="240" />
+                            </IfAny>
+                        </IfLastModified>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+        <!--按日期输出错误日志，方便项目定位错误-->
+        <RollingFile name="ErrorFile" fileName="${baseDir}/iplat.error.log"
+                     filePattern="${baseDir}/$${date:yyyyMMdd}/iplat-error-%d{yyyy-MM-dd-HH}.log">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] %l %logger{36} - %msg%n" />
+            <Policies>
+                <!--默认1小时滚动一次-->
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <!--6.2 关闭elk日志-->
+        <!--        <TextArea name="platLogAppender">
+                    <PatternLayout pattern="%m%n"/>
+                </TextArea>-->
+        <Async name="Async">
+            <AppenderRef ref="InfoFile"/>
+            <AppenderRef ref="platLogAppender"/>
+        </Async>
+        <Async name="AsyncError">
+            <AppenderRef ref="ErrorFile"/>
+        </Async>
+    </Appenders>
+    <Loggers>
+        <!--用来增加sql的日志，无论下面root logger级别是什么都输出sql log-->
+        <logger name="com.baosight.iplat4j.core.data.ibatis.dao.SqlMapDaoLogProxy" level="info"/>
+        <logger name="com.baosight.iplat4j.core.security.sso" level="debug"/>
+        <!--过滤掉spring的一些无用的debug信息-->
+        <logger name="org.springframework" level="error"/>
+        <logger name="org.thymeleaf" level="error"/>
+        <!--输出到数据库-->
+        <!--<logger name="com.baosight.iplat4j.core.log.xeye.PlatEye" level="diag">-->
+        <!--<appender-ref ref="databaseAppender"/>-->
+        <!--</logger>-->
+        <!--警告日志输出文件，可修改-->
+
+        <!-- 默认info及以上级别在控制台输出 -->
+        <Root level="info">
+            <AppenderRef ref="Async" level="info"/>
+            <AppenderRef ref="AsyncError" level="error"/>
+            <AppenderRef ref="Console"  level="info"/>
+        </Root>
+    </Loggers>
+</Configuration>

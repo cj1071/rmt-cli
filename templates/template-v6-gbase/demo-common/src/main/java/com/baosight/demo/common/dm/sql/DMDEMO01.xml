@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="DMDEMO01">
+
+    <select id="query" parameterClass="java.util.HashMap"
+            resultClass="com.baosight.demo.common.dm.domain.TdemoDm01">
+        SELECT
+            DEMO_ID AS "demoId",
+            DEMO_NAME AS "demoName"
+        FROM ${platSchema}.TDEMO_DM_01
+        WHERE 1 = 1
+        <isNotEmpty prepend="AND" property="demoId">
+            DEMO_ID = #demoId#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="demoName">
+            DEMO_NAME LIKE '%' || #demoName# || '%'
+        </isNotEmpty>
+        <dynamic prepend="ORDER BY">
+            <isNotEmpty property="orderBy">
+                $orderBy$
+            </isNotEmpty>
+            <isEmpty property="orderBy">
+                DEMO_ID ASC
+            </isEmpty>
+        </dynamic>
+    </select>
+
+    <select id="count" parameterClass="java.util.HashMap" resultClass="int">
+        SELECT COUNT(1)
+        FROM ${platSchema}.TDEMO_DM_01
+        WHERE 1 = 1
+        <isNotEmpty prepend="AND" property="demoId">
+            DEMO_ID = #demoId#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="demoName">
+            DEMO_NAME LIKE '%' || #demoName# || '%'
+        </isNotEmpty>
+    </select>
+
+    <insert id="insert" parameterClass="java.util.HashMap">
+        INSERT INTO ${platSchema}.TDEMO_DM_01 (
+            DEMO_ID, DEMO_NAME
+        ) VALUES (
+            #demoId:VARCHAR#, #demoName:VARCHAR#
+        )
+    </insert>
+
+    <update id="update" parameterClass="java.util.HashMap">
+        UPDATE ${platSchema}.TDEMO_DM_01
+        SET DEMO_NAME = #demoName#
+        WHERE DEMO_ID = #demoId#
+    </update>
+
+    <delete id="delete" parameterClass="java.util.HashMap">
+        DELETE FROM ${platSchema}.TDEMO_DM_01
+        WHERE DEMO_ID = #demoId#
+    </delete>
+</sqlMap>
+

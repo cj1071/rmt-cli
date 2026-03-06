@@ -1,0 +1,2 @@
+# Publish contents are controlled by package.json "files".
+# Keep this file to avoid npm gitignore fallback warnings.
