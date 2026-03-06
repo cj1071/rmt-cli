@@ -53,7 +53,8 @@ rmt create --template v6-gbase --name rmplat4j-v6-gbase \
   --groupId com.baosight.rmplat4j \
   --artifactId rmplat4j-parent \
   --projectName rmplat4j \
-  --moduleName rm
+  --moduleName rm \
+  --keep-demo
 ```
 
 不带参数时按顺序交互：
@@ -64,12 +65,24 @@ rmt create --template v6-gbase --name rmplat4j-v6-gbase \
 4. artifactId
 5. projectName
 6. moduleName
+7. keepDemo
 
 ## 规则
 
 1. 包名：`com.baosight.<projectName>`
 2. service 包：`com.baosight.<projectName>.<moduleName>`
 3. 模块 artifactId：`<projectName>-bom/common/service/web`
+4. 示例代码策略：
+   - 默认：删除 `demo`/`dm` 示例代码，仅新增目录：
+     - `common/src/main/java/com/baosight/<projectName>/<moduleName>`
+     - `service/src/main/java/com/baosight/<projectName>/<moduleName>`
+     - `service/src/main/resources/<moduleName>`
+     - `web/src/main/java/com/baosight/<projectName>`
+     - 同时删除示例页面资源：`service/src/main/resources/META-INF/resources/DM`
+   - 传 `--keep-demo`：保留模板里的 `demo`/`dm` 示例代码，同时新增以上目录
+5. 启动类策略（与 `--keep-demo` 无关）：
+   - 模板 `DemoApplication.java` 会统一转换为 `com.baosight.<projectName>.<ProjectName>Application`
+   - 文件名、类名、类内 `DemoApplication.class` 引用同步替换
 
 ## 可选参数
 
@@ -77,6 +90,7 @@ rmt create --template v6-gbase --name rmplat4j-v6-gbase \
 - `--force`：目标目录非空时覆盖
 - `--output <dir>`：指定输出父目录
 - `--template-dir <dir>`：覆盖内置模板目录
+- `--keep-demo`：保留模板中的 `demo`/`dm` 示例代码
 
 ## 发布建议
 

@@ -1,6 +1,6 @@
 {
   "name": "@irailmetro/rmt-cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "CLI for scaffolding iPLAT4J Maven projects",
   "license": "UNLICENSED",
   "type": "commonjs",

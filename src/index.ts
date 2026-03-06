@@ -28,6 +28,7 @@ interface CreateOptionsInput {
   artifactId?: string;
   projectName?: string;
   moduleName?: string;
+  keepDemo?: boolean;
   output?: string;
   skipValidate?: boolean;
   force?: boolean;
@@ -41,6 +42,7 @@ interface CreateOptionsResolved {
   artifactId: string;
   projectName: string;
   moduleName: string;
+  keepDemo: boolean;
   output: string;
   skipValidate: boolean;
   force: boolean;
@@ -65,13 +67,14 @@ program
   .option('-a, --artifactId <artifactId>', 'Root Maven artifactId')
   .option('-p, --projectName <projectName>', 'Base package token: com.baosight.<projectName>')
   .option('-m, --moduleName <moduleName>', 'Service package token: com.baosight.<projectName>.<moduleName>')
+  .option('--keep-demo', 'Keep template demo code (demo/dm). Default: remove demo code')
   .option('-o, --output <directory>', 'Parent output directory')
   .option('--template-dir <directory>', 'Override built-in template root directory')
   .option('--skip-validate', 'Skip: mvn -DskipTests validate', false)
   .option('--force', 'Overwrite non-empty target directory', false)
   .addHelpText(
     'after',
-    `\nInteractive order when omitted:\n  template -> name -> groupId -> artifactId -> projectName -> moduleName\n\nExample:\n  rmt create --template v6-gbase --name rmplat4j-v6-gbase \\\n    --groupId com.baosight.rmplat4j --artifactId rmplat4j-parent \\\n    --projectName rmplat4j --moduleName rm`
+    `\nInteractive order when omitted:\n  template -> name -> groupId -> artifactId -> projectName -> moduleName -> keepDemo\n\nExample:\n  rmt create --template v6-gbase --name rmplat4j-v6-gbase \\\n    --groupId com.baosight.rmplat4j --artifactId rmplat4j-parent \\\n    --projectName rmplat4j --moduleName rm --keep-demo`
   )
   .action(async (rawOptions: CreateOptionsInput) => {
     try {
@@ -167,6 +170,12 @@ async function resolveCreateOptions(raw: CreateOptionsInput): Promise<CreateOpti
     options.moduleName = await askInput('moduleName', 'dm');
   }
 
+  const keepDemoProvided = process.argv.includes('--keep-demo');
+  let keepDemo = Boolean(options.keepDemo);
+  if (needInteractive && !keepDemoProvided) {
+    keepDemo = await askConfirm('keepDemo(保留示例代码 demo/dm?)', false);
+  }
+
   return {
     template: normalizeTemplateKey(options.template),
     name: requiredValue(options.name, 'name'),
@@ -174,6 +183,7 @@ async function resolveCreateOptions(raw: CreateOptionsInput): Promise<CreateOpti
     artifactId: requiredValue(options.artifactId, 'artifactId'),
     projectName: requiredValue(options.projectName, 'projectName'),
     moduleName: requiredValue(options.moduleName, 'moduleName'),
+    keepDemo,
     output: requiredValue(options.output, 'output'),
     skipValidate: Boolean(options.skipValidate),
     force: Boolean(options.force),
@@ -191,6 +201,7 @@ function printInteractiveGuide(): void {
     `${chalk.cyan('artifactId')} (${chalk.gray('--artifactId, -a')}) 根工程 Maven artifactId，例如 rmplat4j-parent`,
     `${chalk.cyan('projectName')}(${chalk.gray('--projectName, -p')}) 包名项目段，生成 com.baosight.<projectName>`,
     `${chalk.cyan('moduleName')} (${chalk.gray('--moduleName, -m')}) service 包模块段，生成 com.baosight.<projectName>.<moduleName>`,
+    `${chalk.cyan('keepDemo')}   (${chalk.gray('--keep-demo')})      是否保留模板示例代码 demo/dm（默认不保留）`,
     chalk.gray('提示：直接回车可接受默认值（若有）。'),
     chalk.blue('================================================'),
     ''
@@ -212,6 +223,18 @@ async function askInput(message: string, defaultValue?: string): Promise<string>
   ]);
 
   return String(answer.value ?? '').trim();
+}
+
+async function askConfirm(message: string, defaultValue: boolean): Promise<boolean> {
+  const answer = await inquirer.prompt<{ value: boolean }>([
+    {
+      type: 'confirm',
+      name: 'value',
+      message,
+      default: defaultValue
+    }
+  ]);
+  return Boolean(answer.value);
 }
 
 function requiredValue(value: string | undefined, key: string): string {
@@ -345,9 +368,6 @@ function applyProjectTransform(targetDir: string, options: CreateOptionsResolved
 
   renameModuleDirectories(targetDir, moduleArtifacts);
 
-  const basePackage = `com.baosight.${options.projectName}`;
-  const servicePackage = `com.baosight.${options.projectName}.${options.moduleName}`;
-
   const files = listFilesRecursively(targetDir);
   for (const filePath of files) {
     rewriteFileContent(filePath, {
@@ -355,15 +375,18 @@ function applyProjectTransform(targetDir: string, options: CreateOptionsResolved
       artifactId: options.artifactId,
       projectName: options.projectName,
       moduleName: options.moduleName,
-      appClassName,
-      moduleArtifacts,
-      basePackage,
-      servicePackage
+      moduleArtifacts
     });
   }
 
-  renameJavaPackageDirs(targetDir, moduleArtifacts, options.projectName, options.moduleName);
-  renameWebApplicationFile(targetDir, moduleArtifacts, options.projectName, appClassName);
+  syncWebApplicationFile(targetDir, moduleArtifacts, options.projectName, appClassName);
+  syncJavaPackageDirs(
+    targetDir,
+    moduleArtifacts,
+    options.projectName,
+    options.moduleName,
+    options.keepDemo
+  );
 }
 
 function renameModuleDirectories(
@@ -396,10 +419,7 @@ function rewriteFileContent(
     artifactId: string;
     projectName: string;
     moduleName: string;
-    appClassName: string;
     moduleArtifacts: { bom: string; common: string; service: string; web: string };
-    basePackage: string;
-    servicePackage: string;
   }
 ): void {
   if (!isTextFile(filePath)) {
@@ -423,10 +443,6 @@ function rewriteFileContent(
 
   if (isPom) {
     content = replaceAll(content, 'com.baosight.demo', context.groupId);
-  } else {
-    content = replaceAll(content, 'com.baosight.demo.dm', context.servicePackage);
-    content = replaceAll(content, 'com.baosight.demo', context.basePackage);
-    content = replaceAll(content, 'DemoApplication', context.appClassName);
   }
 
   if (path.extname(filePath).toLowerCase() === '.properties') {
@@ -452,45 +468,76 @@ function replacePropertyValue(content: string, key: string, value: string): stri
   return content.replace(pattern, `$1${value}`);
 }
 
-function renameJavaPackageDirs(
+function syncJavaPackageDirs(
   targetDir: string,
   moduleArtifacts: { bom: string; common: string; service: string; web: string },
   projectName: string,
-  moduleName: string
+  moduleName: string,
+  keepDemo: boolean
 ): void {
   const commonBase = path.join(targetDir, moduleArtifacts.common, 'src', 'main', 'java', 'com', 'baosight');
   const webBase = path.join(targetDir, moduleArtifacts.web, 'src', 'main', 'java', 'com', 'baosight');
   const serviceBase = path.join(targetDir, moduleArtifacts.service, 'src', 'main', 'java', 'com', 'baosight');
+  const serviceResourcesBase = path.join(targetDir, moduleArtifacts.service, 'src', 'main', 'resources');
+  const serviceDemoPages = path.join(serviceResourcesBase, 'META-INF', 'resources', 'DM');
 
-  moveDir(path.join(commonBase, 'demo'), path.join(commonBase, projectName));
-  moveDir(path.join(webBase, 'demo'), path.join(webBase, projectName));
-  moveDir(path.join(serviceBase, 'demo', 'dm'), path.join(serviceBase, projectName, moduleName));
+  if (!keepDemo) {
+    // If projectName is "demo", deleting com/baosight/demo would also delete target packages.
+    if (projectName !== 'demo') {
+      removeDir(path.join(commonBase, 'demo'));
+      removeDir(path.join(webBase, 'demo'));
+      removeDir(path.join(serviceBase, 'demo'));
+    }
+    removeDir(serviceDemoPages);
+  }
 
-  removeIfEmpty(path.join(serviceBase, 'demo'));
+  fs.mkdirSync(path.join(commonBase, projectName, moduleName), { recursive: true });
+  fs.mkdirSync(path.join(serviceBase, projectName, moduleName), { recursive: true });
+  fs.mkdirSync(path.join(webBase, projectName), { recursive: true });
+  fs.mkdirSync(path.join(serviceResourcesBase, moduleName), { recursive: true });
 }
 
-function renameWebApplicationFile(
+function syncWebApplicationFile(
   targetDir: string,
   moduleArtifacts: { bom: string; common: string; service: string; web: string },
   projectName: string,
   appClassName: string
 ): void {
-  const webBase = path.join(targetDir, moduleArtifacts.web, 'src', 'main', 'java', 'com', 'baosight', projectName);
-  const oldFile = path.join(webBase, 'DemoApplication.java');
-  const newFile = path.join(webBase, `${appClassName}.java`);
+  const webDemoBase = path.join(targetDir, moduleArtifacts.web, 'src', 'main', 'java', 'com', 'baosight', 'demo');
+  const oldFile = path.join(webDemoBase, 'DemoApplication.java');
+  const targetBase = path.join(
+    targetDir,
+    moduleArtifacts.web,
+    'src',
+    'main',
+    'java',
+    'com',
+    'baosight',
+    projectName
+  );
+  const targetFile = path.join(targetBase, `${appClassName}.java`);
 
-  if (!fs.existsSync(oldFile) || oldFile === newFile) {
+  if (!fs.existsSync(oldFile)) {
+    return;
+  }
+  const original = fs.readFileSync(oldFile, 'utf8');
+  let updated = original;
+  updated = replaceAll(updated, 'package com.baosight.demo;', `package com.baosight.${projectName};`);
+  updated = replaceAll(updated, 'DemoApplication', appClassName);
+  fs.mkdirSync(targetBase, { recursive: true });
+  if (targetFile === oldFile) {
+    fs.writeFileSync(oldFile, updated, 'utf8');
     return;
   }
 
-  fs.renameSync(oldFile, newFile);
+  fs.writeFileSync(targetFile, updated, 'utf8');
+  fs.rmSync(oldFile, { force: true });
 }
 
 function toPascalCase(value: string): string {
   if (!value) {
     return 'Project';
   }
-
   return value
     .split(/[^a-zA-Z0-9]+/)
     .filter(Boolean)
@@ -498,30 +545,11 @@ function toPascalCase(value: string): string {
     .join('');
 }
 
-function moveDir(srcDir: string, destDir: string): void {
-  if (!isDirectory(srcDir)) {
+function removeDir(dirPath: string): void {
+  if (!fs.existsSync(dirPath)) {
     return;
   }
-
-  fs.mkdirSync(path.dirname(destDir), { recursive: true });
-
-  if (!fs.existsSync(destDir)) {
-    fs.renameSync(srcDir, destDir);
-    return;
-  }
-
-  fs.cpSync(srcDir, destDir, { recursive: true, force: true });
-  fs.rmSync(srcDir, { recursive: true, force: true });
-}
-
-function removeIfEmpty(dirPath: string): void {
-  if (!isDirectory(dirPath)) {
-    return;
-  }
-
-  if (fs.readdirSync(dirPath).length === 0) {
-    fs.rmdirSync(dirPath);
-  }
+  fs.rmSync(dirPath, { recursive: true, force: true });
 }
 
 function listFilesRecursively(rootDir: string): string[] {
