@@ -76,7 +76,7 @@ rmt create --template v6-gbase --name rmplat4j-v6-gbase \
    - 默认：删除 `demo`/`dm` 示例代码，仅新增目录：
      - `common/src/main/java/com/baosight/<projectName>/<moduleName>`
      - `service/src/main/java/com/baosight/<projectName>/<moduleName>`
-     - `service/src/main/resources/<moduleName>`
+     - `service/src/main/resources/META-INF/resources/<MODULE_NAME_UPPERCASE>`
      - `web/src/main/java/com/baosight/<projectName>`
      - 同时删除示例页面资源：`service/src/main/resources/META-INF/resources/DM`
    - 传 `--keep-demo`：保留模板里的 `demo`/`dm` 示例代码，同时新增以上目录

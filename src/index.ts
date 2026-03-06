@@ -479,6 +479,12 @@ function syncJavaPackageDirs(
   const webBase = path.join(targetDir, moduleArtifacts.web, 'src', 'main', 'java', 'com', 'baosight');
   const serviceBase = path.join(targetDir, moduleArtifacts.service, 'src', 'main', 'java', 'com', 'baosight');
   const serviceResourcesBase = path.join(targetDir, moduleArtifacts.service, 'src', 'main', 'resources');
+  const serviceModuleResources = path.join(
+    serviceResourcesBase,
+    'META-INF',
+    'resources',
+    moduleName.toUpperCase()
+  );
   const serviceDemoPages = path.join(serviceResourcesBase, 'META-INF', 'resources', 'DM');
 
   if (!keepDemo) {
@@ -494,7 +500,7 @@ function syncJavaPackageDirs(
   fs.mkdirSync(path.join(commonBase, projectName, moduleName), { recursive: true });
   fs.mkdirSync(path.join(serviceBase, projectName, moduleName), { recursive: true });
   fs.mkdirSync(path.join(webBase, projectName), { recursive: true });
-  fs.mkdirSync(path.join(serviceResourcesBase, moduleName), { recursive: true });
+  fs.mkdirSync(serviceModuleResources, { recursive: true });
 }
 
 function syncWebApplicationFile(
