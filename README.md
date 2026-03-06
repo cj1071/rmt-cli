@@ -12,6 +12,26 @@ iPLAT4J 模板脚手架命令行工具（TypeScript + tsup）。
 
 ## 安装与本地调试
 
+全局安装（推荐）：
+
+```bash
+npm i -g @irailmetro/rmt-cli
+```
+
+升级：
+
+```bash
+npm update -g @irailmetro/rmt-cli
+```
+
+卸载：
+
+```bash
+npm uninstall -g @irailmetro/rmt-cli
+```
+
+本地开发调试：
+
 ```bash
 cd rmt-cli
 pnpm i
