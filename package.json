@@ -1,8 +1,16 @@
 {
   "name": "@irailmetro/rmt-cli",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "CLI for scaffolding iPLAT4J Maven projects",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cj1071/rmt-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/cj1071/rmt-cli/issues"
+  },
+  "homepage": "https://github.com/cj1071/rmt-cli",
   "type": "commonjs",
   "bin": {
     "rmt": "dist/index.js"
